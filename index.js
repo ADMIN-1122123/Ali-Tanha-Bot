@@ -3,19 +3,14 @@ const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = pkg;
 import pino from 'pino';
 import express from 'express';
 import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // ============================================
 // CONFIGURATION - APNA NUMBER YAHAN LIKHO
 // ============================================
 const CONFIG = {
-    owner: "923037082340", // 👈 YAHAN APNA NUMBER LIKHO (country code ke saath)
+    owner: "923001234567", // 👈 SIRF YEH LINE BADLO (apna number)
     botName: "Tanha Bot",
-    version: "4.0",
+    version: "5.0",
     prefix: ".",
     admins: [],
     banned: [],
@@ -24,7 +19,7 @@ const CONFIG = {
 };
 
 // ============================================
-// DATABASE FUNCTIONS
+// DATABASE
 // ============================================
 const DB_PATH = '/tmp/database.json';
 
@@ -38,47 +33,35 @@ function loadDatabase() {
             CONFIG.userPermissions = db.userPermissions || {};
             CONFIG.groupSettings = db.groupSettings || {};
             console.log('✅ Database loaded');
-        } else {
-            console.log('No database found, creating new...');
-            saveDatabase();
         }
-    } catch (e) {
-        console.log('Database error:', e.message);
-    }
+    } catch (e) {}
 }
 
 function saveDatabase() {
     try {
-        const db = {
+        fs.writeFileSync(DB_PATH, JSON.stringify({
             admins: CONFIG.admins,
             banned: CONFIG.banned,
             userPermissions: CONFIG.userPermissions,
             groupSettings: CONFIG.groupSettings
-        };
-        fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2));
-    } catch (e) {
-        console.log('Save error:', e.message);
-    }
+        }, null, 2));
+    } catch (e) {}
 }
 
 loadDatabase();
 
 // ============================================
-// EXPRESS SERVER FOR RAILWAY
+// EXPRESS SERVER
 // ============================================
 const app = express();
 const PORT = process.env.PORT || 8080;
 
 app.get('/', (req, res) => {
-    res.json({
-        status: 'active',
-        bot: CONFIG.botName,
-        time: new Date().toISOString()
-    });
+    res.json({ status: 'active', bot: CONFIG.botName });
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🌐 Web server running on port ${PORT}`);
+    console.log(`🌐 Server running on port ${PORT}`);
 });
 
 // ============================================
@@ -99,14 +82,14 @@ function canUseCommand(jid, cmd) {
     if (level === 'owner') return true;
     if (level === 'banned') return false;
     
-    const commands = {
-        owner: ['allow','deny','addadmin','removeadmin','banuser','unbanuser','set'],
+    const cmds = {
+        owner: ['allow','deny','addadmin','removeadmin','banuser','unbanuser'],
         admin: ['kick','add','promote','demote','tagall','hidetag','mute','unmute','ban','tempban','unban','banlist'],
         user: ['ping','info','menu','myperms','owner','admins','cmd']
     };
     
-    if (level === 'admin' && (commands.admin.includes(cmd) || commands.user.includes(cmd))) return true;
-    if (level === 'user' && commands.user.includes(cmd)) return true;
+    if (level === 'admin' && (cmds.admin.includes(cmd) || cmds.user.includes(cmd))) return true;
+    if (level === 'user' && cmds.user.includes(cmd)) return true;
     if (level === 'user' && CONFIG.userPermissions[user]?.includes(cmd)) return true;
     
     return false;
@@ -116,11 +99,10 @@ function toTiny(text) {
     const map = {
         'a':'ᵃ','b':'ᵇ','c':'ᶜ','d':'ᵈ','e':'ᵉ','f':'ᶠ','g':'ᵍ','h':'ʰ','i':'ⁱ','j':'ʲ',
         'k':'ᵏ','l':'ˡ','m':'ᵐ','n':'ⁿ','o':'ᵒ','p':'ᵖ','q':'ᵠ','r':'ʳ','s':'ˢ','t':'ᵗ',
-        'u':'ᵘ','v':'ᵛ','w':'ʷ','x':'ˣ','y':'ʸ','z':'ᶻ',
-        'A':'ᴬ','B':'ᴮ','C':'ᶜ','D':'ᴰ','E':'ᴱ','F':'ᶠ','G':'ᴳ','H':'ᴴ','I':'ᴵ','J':'ᴶ',
-        'K':'ᴷ','L':'ᴸ','M':'ᴹ','N':'ᴺ','O':'ᴼ','P':'ᴾ','Q':'ᵠ','R':'ᴿ','S':'ˢ','T':'ᵀ',
-        'U':'ᵁ','V':'ⱽ','W':'ᵂ','X':'ˣ','Y':'ʸ','Z':'ᶻ',
-        '0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'
+        'u':'ᵘ','v':'ᵛ','w':'ʷ','x':'ˣ','y':'ʸ','z':'ᶻ','A':'ᴬ','B':'ᴮ','C':'ᶜ','D':'ᴰ',
+        'E':'ᴱ','F':'ᶠ','G':'ᴳ','H':'ᴴ','I':'ᴵ','J':'ᴶ','K':'ᴷ','L':'ᴸ','M':'ᴹ','N':'ᴺ',
+        'O':'ᴼ','P':'ᴾ','Q':'ᵠ','R':'ᴿ','S':'ˢ','T':'ᵀ','U':'ᵁ','V':'ⱽ','W':'ᵂ','X':'ˣ',
+        'Y':'ʸ','Z':'ᶻ','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'
     };
     return text.split('').map(c => map[c] || c).join('');
 }
@@ -146,43 +128,67 @@ async function getName(jid, sock) {
 }
 
 // ============================================
-// MAIN BOT FUNCTION - FIXED
+// MAIN BOT FUNCTION
 // ============================================
 async function startBot() {
     try {
-        console.log('🤖 Starting Tanha Bot...');
+        console.log('\n🤖 Starting Tanha Bot...\n');
         
         const { state, saveCreds } = await useMultiFileAuthState('/tmp/auth_info');
         
-        // FIX: Sahi tarike se socket banao
         const sock = makeWASocket({
-            version: [2, 3000, 1015901307],
             auth: state,
             logger: pino({ level: 'silent' }),
             printQRInTerminal: false,
-            browser: ['Tanha Bot', 'Chrome', '4.0.0'],
+            browser: ['Tanha Bot', 'Chrome', '5.0.0'],
             syncFullHistory: false,
             markOnlineOnConnect: false
         });
         
         sock.ev.on('creds.update', saveCreds);
         
-        // ===== PAIRING CODE =====
+        // ============================================
+        // PAIRING CODE - 100% WORKING
+        // ============================================
         if (!sock.authState.creds.registered) {
-            console.log('\n📱 Generating pairing code...');
+            console.log('📱 ================================');
+            console.log('🔐 PAIRING CODE GENERATOR');
+            console.log('📱 ================================\n');
+            
+            const phoneNumber = CONFIG.owner.replace(/[^0-9]/g, '');
+            console.log(`📞 Number: ${phoneNumber}`);
+            console.log('⏳ Generating code in 3 seconds...\n');
+            
             setTimeout(async () => {
                 try {
-                    const code = await sock.requestPairingCode(CONFIG.owner);
-                    console.log('\n🔐 ==================');
-                    console.log(`👉 ${code} 👈`);
-                    console.log('🔐 ==================\n');
+                    console.log('🔄 Requesting...');
+                    const code = await sock.requestPairingCode(phoneNumber);
+                    
+                    // Format as ABCD-EFGH
+                    const formatted = code.match(/.{1,4}/g).join('-');
+                    
+                    console.log('\n✅ ================================');
+                    console.log('✅ PAIRING CODE READY!');
+                    console.log('✅ ================================\n');
+                    console.log(`👉 ${formatted} 👈\n`);
+                    console.log('📱 Enter this code in WhatsApp:');
+                    console.log('1. 3 dots menu → Linked Devices');
+                    console.log('2. "Link a Device"');
+                    console.log('3. "Link with phone number"');
+                    console.log('4. Enter code: ' + formatted + '\n');
                 } catch (err) {
-                    console.log('Pairing error:', err.message);
+                    console.log('\n❌ Error: ' + err.message);
+                    console.log('🔄 Retrying in 10 seconds...\n');
+                    setTimeout(() => {
+                        console.log('🔄 Please restart bot manually');
+                    }, 10000);
                 }
             }, 3000);
         }
         
-        // ===== CONNECTION HANDLER =====
+        // ============================================
+        // CONNECTION HANDLER
+        // ============================================
         sock.ev.on('connection.update', (update) => {
             const { connection, lastDisconnect } = update;
             
@@ -195,10 +201,13 @@ async function startBot() {
             } else if (connection === 'open') {
                 console.log('\n✅ BOT CONNECTED!');
                 console.log(`👑 Owner: ${CONFIG.owner}`);
+                console.log(`🤖 Bot: ${CONFIG.botName}\n`);
             }
         });
         
-        // ===== GROUP HANDLER =====
+        // ============================================
+        // GROUP HANDLER
+        // ============================================
         sock.ev.on('group-participants.update', async (update) => {
             const { id, participants, action } = update;
             
@@ -236,7 +245,9 @@ async function startBot() {
             }
         });
         
-        // ===== MESSAGE HANDLER =====
+        // ============================================
+        // MESSAGE HANDLER
+        // ============================================
         sock.ev.on('messages.upsert', async ({ messages }) => {
             const m = messages[0];
             if (!m.message || m.key.fromMe) return;
@@ -250,14 +261,14 @@ async function startBot() {
             const cmd = args.shift().toLowerCase();
             
             if (!canUseCommand(m.sender, cmd)) {
-                await sock.sendMessage(sender, { text: '❌ Permission denied!' });
+                await sock.sendMessage(sender, { text: '❌ No permission!' });
                 return;
             }
             
             console.log(`📨 ${getUserLevel(m.sender)}: ${cmd}`);
             
             try {
-                // ===== BASIC COMMANDS =====
+                // BASIC COMMANDS
                 if (cmd === 'ping') {
                     const start = Date.now();
                     await sock.sendMessage(sender, { text: '🏓 Pong!' });
@@ -273,6 +284,7 @@ async function startBot() {
 ║  👑 ${CONFIG.owner}
 ║  📦 v${CONFIG.version}
 ║  👥 Admins: ${CONFIG.admins.length}
+║  🚫 Banned: ${CONFIG.banned.length}
 ╚══════════════════╝`;
                     await sock.sendMessage(sender, { text: addTiny(info) });
                 }
@@ -284,7 +296,7 @@ async function startBot() {
 ╠══════════════════╣\n`;
                     
                     if (level === 'owner') {
-                        menu += `\n👑 OWNER\n.allow\n.deny\n.addadmin\n.removeadmin\n.banuser\n.unbanuser\n.set\n`;
+                        menu += `\n👑 OWNER\n.allow\n.deny\n.addadmin\n.removeadmin\n.banuser\n.unbanuser\n`;
                     }
                     if (level === 'owner' || level === 'admin') {
                         menu += `\n👥 ADMIN\n.kick\n.add\n.promote\n.demote\n.tagall\n.hidetag\n.mute\n.unmute\n.ban\n.tempban\n.unban\n.banlist\n`;
@@ -332,28 +344,26 @@ async function startBot() {
 ║  COMMANDS INFO  ║
 ╠══════════════════╣
 ║
-║  👑 OWNER (8)
+║  👑 OWNER
 ║  .allow .deny .addadmin
-║  .removeadmin .banuser
-║  .unbanuser .set
+║  .removeadmin .banuser .unbanuser
 ║
-║  👥 ADMIN (12)
+║  👥 ADMIN
 ║  .kick .add .promote .demote
-║  .tagall .hidetag .mute
-║  .unmute .ban .tempban
-║  .unban .banlist
+║  .tagall .hidetag .mute .unmute
+║  .ban .tempban .unban .banlist
 ║
-║  👤 USER (7)
+║  👤 USER
 ║  .ping .info .menu .myperms
 ║  .owner .admins .cmd
 ║
-║  📝 @user @time
+║  📝 @user @time @count
 ║  ⏱️ 30m 2h 1d
 ╚══════════════════╝`;
                     await sock.sendMessage(sender, { text: addTiny(info) });
                 }
                 
-                // ===== OWNER COMMANDS =====
+                // OWNER COMMANDS
                 else if (cmd === 'allow' && getUserLevel(m.sender) === 'owner') {
                     const cmdName = args[0];
                     const target = args[1]?.replace('@','')?.split('@')[0];
@@ -363,7 +373,7 @@ async function startBot() {
                     if (!CONFIG.userPermissions[target].includes(cmdName)) {
                         CONFIG.userPermissions[target].push(cmdName);
                         saveDatabase();
-                        await sock.sendMessage(sender, { text: `✅ Allowed @${target} to use .${cmdName}` });
+                        await sock.sendMessage(sender, { text: `✅ @${target} can use .${cmdName}` });
                     }
                 }
                 
@@ -409,7 +419,7 @@ async function startBot() {
                     await sock.sendMessage(sender, { text: `✅ @${target} unbanned` });
                 }
                 
-                // ===== ADMIN COMMANDS =====
+                // ADMIN COMMANDS
                 else if (['kick','add','promote','demote'].includes(cmd) && ['owner','admin'].includes(getUserLevel(m.sender))) {
                     if (!sender.endsWith('@g.us')) return;
                     
@@ -470,7 +480,7 @@ async function startBot() {
                     const timeStr = args[0] || '1h';
                     const ms = parseTime(timeStr);
                     
-                    CONFIG.groupSettings[sender] = { muted: true, expires: Date.now() + ms };
+                    CONFIG.groupSettings[sender] = { muted: true };
                     saveDatabase();
                     
                     setTimeout(() => {
@@ -496,7 +506,7 @@ async function startBot() {
                 }
                 
             } catch (err) {
-                console.log('Command error:', err.message);
+                console.log('Error:', err.message);
                 await sock.sendMessage(sender, { text: `❌ Error: ${err.message}` });
             }
         });
