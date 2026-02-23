@@ -8,7 +8,7 @@ import fs from 'fs';
 // CONFIGURATION - APNA NUMBER YAHAN LIKHO
 // ============================================
 const CONFIG = {
-    owner: "923001234567", // 👈 SIRF YEH LINE BADLO (apna number)
+    owner: "923037082340", // 👈 SIRF YEH LINE BADLO (apna number)
     botName: "Tanha Bot",
     version: "5.0",
     prefix: ".",
