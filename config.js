@@ -4,7 +4,7 @@ class BotConfig {
     constructor() {
         // 👇 YEH BADLO — APNA NUMBER LIKHO (country code ke saath)
         // PAKISTAN: 92XXXXXXXXXX, INDIA: 91XXXXXXXXXX
-        this.owner = "923037082340";  // APNA NUMBER YAHAN LIKHO!
+        this.owner = "923275420358";  // APNA NUMBER YAHAN LIKHO!
         
         this.botName = "Tanha Bot";
         this.version = "2.0";
