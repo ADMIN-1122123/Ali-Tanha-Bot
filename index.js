@@ -8,7 +8,7 @@ import fs from 'fs';
 // CONFIGURATION – TERA NUMBER SET HAI
 // ============================================
 const CONFIG = {
-    owner: "923037082340",      // ✅ tera number set kar diya
+    owner: "923275420358",      // ✅ tera number set kar diya
     botName: "Tanha Bot",
     version: "5.0",
     prefix: ".",
