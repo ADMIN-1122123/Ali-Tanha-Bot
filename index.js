@@ -5,10 +5,10 @@ import express from 'express';
 import fs from 'fs';
 
 // ============================================
-// CONFIGURATION - APNA NUMBER YAHAN LIKHO
+// CONFIGURATION – TERA NUMBER SET HAI
 // ============================================
 const CONFIG = {
-    owner: "923037082340", // 👈 SIRF YEH LINE BADLO (apna number)
+    owner: "923037082340",      // ✅ tera number set kar diya
     botName: "Tanha Bot",
     version: "5.0",
     prefix: ".",
@@ -148,14 +148,14 @@ async function startBot() {
         sock.ev.on('creds.update', saveCreds);
         
         // ============================================
-        // PAIRING CODE - 100% WORKING
+        // PAIRING CODE – TERA NUMBER: 923037082340
         // ============================================
         if (!sock.authState.creds.registered) {
             console.log('📱 ================================');
             console.log('🔐 PAIRING CODE GENERATOR');
             console.log('📱 ================================\n');
             
-            const phoneNumber = CONFIG.owner.replace(/[^0-9]/g, '');
+            const phoneNumber = "923037082340";  // ✅ tera number yahan bhi set hai
             console.log(`📞 Number: ${phoneNumber}`);
             console.log('⏳ Generating code in 3 seconds...\n');
             
@@ -179,9 +179,6 @@ async function startBot() {
                 } catch (err) {
                     console.log('\n❌ Error: ' + err.message);
                     console.log('🔄 Retrying in 10 seconds...\n');
-                    setTimeout(() => {
-                        console.log('🔄 Please restart bot manually');
-                    }, 10000);
                 }
             }, 3000);
         }
@@ -246,7 +243,7 @@ async function startBot() {
         });
         
         // ============================================
-        // MESSAGE HANDLER
+        // MESSAGE HANDLER – ALL COMMANDS
         // ============================================
         sock.ev.on('messages.upsert', async ({ messages }) => {
             const m = messages[0];
